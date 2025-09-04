@@ -6,8 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 public class RegisterDto {
 
     private String username;
@@ -18,6 +16,6 @@ public class RegisterDto {
 
     private String phoneNo;
 
-    private Role role;
+    private Role role; // Auto done by controller based on the endpoint
 
 }
