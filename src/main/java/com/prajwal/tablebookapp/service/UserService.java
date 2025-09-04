@@ -41,9 +41,11 @@ public class UserService {
         user.setUsername(req.getUsername());
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
+        user.setPhoneNo(req.getPhoneNo());
         user.setRole(req.getRole());
         user.setAuthProvider(AuthProvider.SELF);
 
+        System.out.println("Registering user: " + user);
         return userRepo.save(user);
     }
 

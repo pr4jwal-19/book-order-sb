@@ -26,6 +26,7 @@ public class AdminController {
     @PostMapping("/register")
     public ResponseEntity<Users> registerAdmin(@RequestBody RegisterDto req) {
         req.setRole(Role.ADMIN);
+        System.out.println("Registering admin: " + req);
         return ResponseEntity.ok(userService.registerUser(req));
     }
 }

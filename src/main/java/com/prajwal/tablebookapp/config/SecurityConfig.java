@@ -56,10 +56,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers("/api/v1/auth/**").permitAll()
-                                .requestMatchers("/api/v1/guest/**").hasRole("GUEST")
-                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .requestMatchers("/api/v1/guest/register").permitAll()
                                 .requestMatchers("/api/v1/admin/register").permitAll()
+                                .requestMatchers("/api/v1/guest/**").hasRole("GUEST")
+                                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated())
                 //.httpBasic(Customizer.withDefaults())
                 .oauth2Login(auth -> auth
