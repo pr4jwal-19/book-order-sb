@@ -2,6 +2,9 @@ package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.BookTableRequest;
 import com.prajwal.tablebookapp.dto.ReservationDto;
+import com.prajwal.tablebookapp.exception.ReservationNotFoundException;
+import com.prajwal.tablebookapp.exception.TableNotAvailableException;
+import com.prajwal.tablebookapp.exception.UserNotFoundException;
 import com.prajwal.tablebookapp.model.*;
 import com.prajwal.tablebookapp.repo.CafeTableRepo;
 import com.prajwal.tablebookapp.repo.ReservationRepo;
@@ -31,18 +34,17 @@ public class ReservationService {
 
     public ReservationDto bookTable(BookTableRequest tableRequest) {
         CafeTable table = cafeTableRepo.findById(tableRequest.getTableId())
-                .orElseThrow(() -> new RuntimeException("Table not found"));
+                .orElseThrow(() -> new TableNotAvailableException(tableRequest.getTableId()));
 
         if (table.getStatus() != TableStatus.AVAILABLE) {
-            throw new RuntimeException("Table is not available for booking");
+            throw new TableNotAvailableException(tableRequest.getTableId());
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
-        // for testing purpose, later get user from security context
         Users currUser = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         Reservation reservation = Reservation.builder()
                 .cafeTable(table)
@@ -63,7 +65,7 @@ public class ReservationService {
         String email = auth.getName();
 
         Users currUser = userRepo.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         return reservationRepo.findByUsersUserId(currUser.getUserId())
                 .stream()
@@ -83,7 +85,7 @@ public class ReservationService {
     public void cancelReservation(Long reservationId) {
 
         Reservation reservation = reservationRepo.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found"));
+                .orElseThrow(() -> new ReservationNotFoundException(reservationId));
 
         CafeTable table = reservation.getCafeTable();
         table.setStatus(TableStatus.AVAILABLE);

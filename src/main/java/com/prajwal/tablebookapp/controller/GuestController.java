@@ -52,20 +52,41 @@ public class GuestController {
     // guest flow
     // when guest logs in and clicks browse tables
     @GetMapping("/tables")
-    public ResponseEntity<List<CafeTableDto>> viewAllTables() {
-        return ResponseEntity.ok(cafeTableService.getAllTables());
+    public ResponseEntity<ResponseWrapper<List<CafeTableDto>>> viewAllTables() {
+        List<CafeTableDto> tables = cafeTableService.getAllTables();
+        return ResponseEntity.ok(
+                ResponseWrapper.<List<CafeTableDto>>builder()
+                        .success(true)
+                        .message("Fetched all tables successfully")
+                        .data(tables)
+                        .build()
+        );
     }//tested
 
     // if table status -> green/available -> can book
     @PostMapping("/bookTable")
-    public ResponseEntity<ReservationDto> bookTable(@RequestBody BookTableRequest tableRequest) {
-        return ResponseEntity.ok(reservationService.bookTable(tableRequest));
+    public ResponseEntity<ResponseWrapper<ReservationDto>> bookTable(@RequestBody BookTableRequest tableRequest) {
+        ReservationDto reservationDto = reservationService.bookTable(tableRequest);
+        return ResponseEntity.ok(
+                ResponseWrapper.<ReservationDto>builder()
+                        .success(true)
+                        .message("Table booked successfully")
+                        .data(reservationDto)
+                        .build()
+        );
     }//tested
 
     // if clicks on view reservations
     @GetMapping("/reservations")
-    public ResponseEntity<List<ReservationDto>> viewReservations() {
-        return ResponseEntity.ok(reservationService.getReservationsFromCurrentUser()); // start from here
+    public ResponseEntity<ResponseWrapper<List<ReservationDto>>> viewReservations() {
+        List<ReservationDto> reservations = reservationService.getReservationsFromCurrentUser();
+        return ResponseEntity.ok(
+                ResponseWrapper.<List<ReservationDto>>builder()
+                        .success(true)
+                        .message("Fetched all reservations successfully")
+                        .data(reservations)
+                        .build()
+        ); // start from here
     }//tested
 
 }

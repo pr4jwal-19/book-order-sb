@@ -57,31 +57,65 @@ public class AdminController {
     // can add, update, delete tables
 
     @PostMapping("/addTable")
-    public ResponseEntity<CafeTableDto> addTable(@RequestBody CafeTableDto cafeTableDto) {
-        return ResponseEntity.ok(cafeTableService.addTable(cafeTableDto));
+    public ResponseEntity<ResponseWrapper<CafeTableDto>> addTable(@RequestBody CafeTableDto cafeTableDto) {
+        CafeTableDto savedTable = cafeTableService.addTable(cafeTableDto);
+        return ResponseEntity.ok(
+                ResponseWrapper.<CafeTableDto>builder()
+                        .success(true)
+                        .message("Table added successfully")
+                        .data(savedTable)
+                        .build()
+        );
     }//tested
 
     @PutMapping("/updateTable/{tableId}")
-    public ResponseEntity<CafeTableDto> updateTable(@PathVariable Long tableId, @RequestBody CafeTableDto cafeTableDto) {
-        return ResponseEntity.ok(cafeTableService.updateTable(tableId, cafeTableDto));
+    public ResponseEntity<ResponseWrapper<CafeTableDto>> updateTable(@PathVariable Long tableId, @RequestBody CafeTableDto cafeTableDto) {
+        CafeTableDto updatedTable =
+                cafeTableService.updateTable(tableId, cafeTableDto);
+        return ResponseEntity.ok(
+                ResponseWrapper.<CafeTableDto>builder()
+                        .success(true)
+                        .message("Table updated successfully")
+                        .data(updatedTable)
+                        .build()
+        );
     }//tested
 
     @DeleteMapping("/deleteTable/{tableId}")
-    public ResponseEntity<String> deleteTable(@PathVariable Long tableId) {
+    public ResponseEntity<ResponseWrapper<Void>> deleteTable(@PathVariable Long tableId) {
         cafeTableService.deleteTable(tableId);
-        return ResponseEntity.ok("Table deleted successfully");
+        return ResponseEntity.ok(
+                ResponseWrapper.<Void>builder()
+                        .success(true)
+                        .message("Table deleted successfully")
+                        .data(null)
+                        .build()
+        );
     }//tested
 
     // view and manage(cancel) all reservations
     @GetMapping("/reservations")
-    public ResponseEntity<List<ReservationDto>> viewAllReservations() {
-        return ResponseEntity.ok(reservationService.getAllReservations());
+    public ResponseEntity<ResponseWrapper<List<ReservationDto>>> viewAllReservations() {
+        List<ReservationDto> reservations = reservationService.getAllReservations();
+        return ResponseEntity.ok(
+                ResponseWrapper.<List<ReservationDto>>builder()
+                        .success(true)
+                        .message("Fetched all reservations successfully")
+                        .data(reservations)
+                        .build()
+        );
     }//tested
 
     @DeleteMapping("/cancelReservation/{reservationId}")
-    public ResponseEntity<String> cancelReservation(@PathVariable Long reservationId) {
+    public ResponseEntity<ResponseWrapper<Void>> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
-        return ResponseEntity.ok("Reservation cancelled successfully");
+        return ResponseEntity.ok(
+                ResponseWrapper.<Void>builder()
+                        .success(true)
+                        .message("Reservation cancelled successfully")
+                        .data(null)
+                        .build()
+        );
     }//tested
 
 }

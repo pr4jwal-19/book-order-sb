@@ -1,6 +1,7 @@
 package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.CafeTableDto;
+import com.prajwal.tablebookapp.exception.TableNotAvailableException;
 import com.prajwal.tablebookapp.model.CafeTable;
 import com.prajwal.tablebookapp.model.TableStatus;
 import com.prajwal.tablebookapp.repo.CafeTableRepo;
@@ -20,7 +21,7 @@ public class CafeTableService {
         this.cafeTableRepo = cafeTableRepo;
     }
 
-
+    // admin flow
     public CafeTableDto addTable(CafeTableDto cafeTableDto) {
         CafeTable table = CafeTable.builder()
                 .tableNo(cafeTableDto.getTableNo())
@@ -32,7 +33,7 @@ public class CafeTableService {
 
     public CafeTableDto updateTable(Long tableId, CafeTableDto cafeTableDto) {
         CafeTable table = cafeTableRepo.findById(tableId)
-                .orElseThrow(() -> new RuntimeException("Table not found"));
+                .orElseThrow(() -> new TableNotAvailableException(tableId));
 
         table.setTableNo(cafeTableDto.getTableNo());
         table.setCapacity(cafeTableDto.getCapacity());
