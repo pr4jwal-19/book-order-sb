@@ -31,6 +31,17 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(TableDeletionFailedException.class)
+    public ResponseEntity<ResponseWrapper<Void>> handleTableDeletionException(TableDeletionFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ResponseWrapper.<Void>builder()
+                        .success(false)
+                        .message(ex.getMessage())
+                        .data(null)
+                        .build()
+        );
+    }
+
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ResponseWrapper<Void>> handleUserNotFoundException(UserNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(

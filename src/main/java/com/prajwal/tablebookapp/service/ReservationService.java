@@ -111,7 +111,9 @@ public class ReservationService {
         cafeTableRepo.save(table);
 
         // can do a soft delete by changing status to CANCELLED
-        reservationRepo.delete(reservation);
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservationRepo.save(reservation);
+        //reservationRepo.delete(reservation); // later removed during cron job
     }
 
     private ReservationDto toDto(Reservation reservation) {

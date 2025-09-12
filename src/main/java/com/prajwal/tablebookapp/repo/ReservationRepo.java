@@ -25,4 +25,14 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("endTime") LocalDateTime endTime
     );
 
+    @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
+           "FROM Reservation r " +
+           "WHERE r.cafeTable.tableId = :tableId " +
+            "AND r.status = 'CONFIRMED' " +
+           "AND r.endTime > :now ")
+    boolean hasActiveReservations(
+            @Param("tableId") Long tableId,
+            @Param("now") LocalDateTime now
+    );
+
 }
