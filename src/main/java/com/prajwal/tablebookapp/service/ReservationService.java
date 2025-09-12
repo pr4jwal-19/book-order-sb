@@ -2,6 +2,7 @@ package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.BookTableRequest;
 import com.prajwal.tablebookapp.dto.ReservationDto;
+import com.prajwal.tablebookapp.exception.ReservationConflictException;
 import com.prajwal.tablebookapp.exception.ReservationNotFoundException;
 import com.prajwal.tablebookapp.exception.TableNotAvailableException;
 import com.prajwal.tablebookapp.exception.UserNotFoundException;
@@ -36,8 +37,26 @@ public class ReservationService {
         CafeTable table = cafeTableRepo.findById(tableRequest.getTableId())
                 .orElseThrow(() -> new TableNotAvailableException(tableRequest.getTableId()));
 
-        if (table.getStatus() != TableStatus.AVAILABLE) {
+        // status -> BOOKED -> guest has arrived and is seated
+        if (table.getStatus() == TableStatus.BOOKED) {
             throw new TableNotAvailableException(tableRequest.getTableId());
+        }
+
+        // check for time validity
+        if (tableRequest.getEndTime().isBefore(tableRequest.getStartTime()) ||
+                tableRequest.getEndTime().isEqual(tableRequest.getStartTime())) {
+            throw new ReservationConflictException(table.getTableId());
+        }
+
+        // check for overlapping reservations
+        List<Reservation> conflicts = reservationRepo.findOverlappingReservations(
+                table.getTableId(),
+                tableRequest.getStartTime(),
+                tableRequest.getEndTime()
+        );
+
+        if (!conflicts.isEmpty()) {
+            throw new ReservationConflictException(table.getTableId());
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -54,7 +73,7 @@ public class ReservationService {
                 .status(ReservationStatus.CONFIRMED)
                 .build();
 
-        table.setStatus(TableStatus.BOOKED);
+        table.setStatus(TableStatus.RESERVED);
         cafeTableRepo.save(table);
 
         return toDto(reservationRepo.save(reservation));
@@ -91,6 +110,7 @@ public class ReservationService {
         table.setStatus(TableStatus.AVAILABLE);
         cafeTableRepo.save(table);
 
+        // can do a soft delete by changing status to CANCELLED
         reservationRepo.delete(reservation);
     }
 
