@@ -1,5 +1,6 @@
 package com.prajwal.tablebookapp.config;
 
+import com.prajwal.tablebookapp.security.JwtAuthEntryPoint;
 import com.prajwal.tablebookapp.security.JwtFilter;
 import com.prajwal.tablebookapp.service.implementations.CustomOAuthSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +33,13 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
 
     private final JwtFilter jwtFilter;
+    private final JwtAuthEntryPoint jwtAuthEntryPoint;
 
     @Autowired
-    public SecurityConfig(UserDetailsService userDetailsService, JwtFilter jwtFilter) {
+    public SecurityConfig(UserDetailsService userDetailsService, JwtFilter jwtFilter, JwtAuthEntryPoint jwtAuthEntryPoint) {
         this.userDetailsService = userDetailsService;
         this.jwtFilter = jwtFilter;
+        this.jwtAuthEntryPoint = jwtAuthEntryPoint;
     }
 
     @Bean
@@ -65,6 +68,7 @@ public class SecurityConfig {
                 .oauth2Login(auth -> auth
                         .successHandler(oauth2Handler)
                 )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthEntryPoint))
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

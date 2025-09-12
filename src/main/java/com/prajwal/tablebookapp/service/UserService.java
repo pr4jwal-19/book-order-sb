@@ -1,6 +1,7 @@
 package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.RegisterDto;
+import com.prajwal.tablebookapp.exception.AuthenticationFailedException;
 import com.prajwal.tablebookapp.model.AuthProvider;
 import com.prajwal.tablebookapp.model.Role;
 import com.prajwal.tablebookapp.model.Users;
@@ -59,7 +60,7 @@ public class UserService {
             return jwtUtils.generateToken((UserDetails) auth.getPrincipal());
         }
         else {
-            throw new RuntimeException("Authentication failed");
+            throw new AuthenticationFailedException("Invalid Credentials");
         }
     }
 

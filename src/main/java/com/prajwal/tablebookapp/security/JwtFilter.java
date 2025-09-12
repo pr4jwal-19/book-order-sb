@@ -1,6 +1,9 @@
 package com.prajwal.tablebookapp.security;
 
+import com.prajwal.tablebookapp.exception.InvalidJwtException;
 import com.prajwal.tablebookapp.service.utils.JwtUtils;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -47,20 +50,26 @@ public class JwtFilter extends OncePerRequestFilter {
 
             //UserDetails userDetails = applicationContext.getBean(CustomUserDetailsService.class).loadUserByUsername(email);
 
-            if (jwtUtils.validateToken(jwtToken, email)) {
+            try {
+                if (jwtUtils.validateToken(jwtToken, email)) {
 
-                List<String> roles = jwtUtils.extractRoles(jwtToken);
+                    List<String> roles = jwtUtils.extractRoles(jwtToken);
 
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
-                                email,
-                                null,
-                                roles.stream().map(SimpleGrantedAuthority::new).toList()
-                        );
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    email,
+                                    null,
+                                    roles.stream().map(SimpleGrantedAuthority::new).toList()
+                            );
 
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            } catch (ExpiredJwtException e) {
+                throw new InvalidJwtException("Token expired, please login again");
+            } catch (JwtException e) {
+                throw new InvalidJwtException("Invalid JWT token" + e.getMessage());
             }
         }
 

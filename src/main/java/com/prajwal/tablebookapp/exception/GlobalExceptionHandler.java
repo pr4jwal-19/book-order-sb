@@ -75,6 +75,28 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<ResponseWrapper<Void>> handleAuthenticationException(AuthenticationFailedException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ResponseWrapper.<Void>builder()
+                        .success(false)
+                        .message("Unauthorized access: " + ex.getMessage())
+                        .data(null)
+                        .build()
+        );
+    }
+
+    @ExceptionHandler(InvalidJwtException.class)
+    public ResponseEntity<ResponseWrapper<Void>> handleExpiredJwtTokenException(InvalidJwtException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+                ResponseWrapper.<Void>builder()
+                        .success(false)
+                        .message("Token has expired: " + ex.getMessage())
+                        .data(null)
+                        .build()
+        );
+    }
+
     // fallback for any other exceptions
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResponseWrapper<Void>> handleGenericException(Exception ex) {
