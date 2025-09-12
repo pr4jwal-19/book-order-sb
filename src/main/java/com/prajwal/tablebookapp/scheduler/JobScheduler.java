@@ -14,13 +14,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-public class TableStatusScheduler {
+public class JobScheduler {
 
     private final ReservationRepo reservationRepo;
     private final CafeTableRepo cafeTableRepo;
 
     @Autowired
-    public TableStatusScheduler(ReservationRepo reservationRepo, CafeTableRepo cafeTableRepo) {
+    public JobScheduler(ReservationRepo reservationRepo, CafeTableRepo cafeTableRepo) {
         this.reservationRepo = reservationRepo;
         this.cafeTableRepo = cafeTableRepo;
     }
@@ -55,5 +55,16 @@ public class TableStatusScheduler {
             cafeTableRepo.save(currTable);
         }
 
+    }
+
+    @Scheduled(cron = "0 0 12 * * SUN") // every Sunday at noon
+    @Transactional
+    public void cleanUpOldReservations() {
+
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(7); // 7 days ago
+
+        reservationRepo.deleteCancelledReservationsPastEndTime(cutoff);
+
+        reservationRepo.deleteExpiredConfirmedReservations(cutoff);
     }
 }
