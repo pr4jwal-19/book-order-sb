@@ -1,9 +1,7 @@
 package com.prajwal.tablebookapp.dto;
 
 import com.prajwal.tablebookapp.model.Role;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 public class RegisterDto {

@@ -50,17 +50,20 @@ public class SecurityConfig {
                 .cors(cors ->
                         cors.configurationSource(request -> {
                             var config = new CorsConfiguration();
-                            config.applyPermitDefaultValues();
+                            config.setAllowedOriginPatterns(List.of("*"));// add vercel frontend url here --later
                             config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+                            config.setAllowedHeaders(List.of("*"));
+                            config.setAllowCredentials(true);
+
                             var source = new UrlBasedCorsConfigurationSource();
                             source.registerCorsConfiguration("/**", config);
-                            return config;
+                            return source.getCorsConfiguration(request);
                         }))
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers("/api/v1/auth/**").permitAll()
                                 .requestMatchers("/api/v1/guest/register").permitAll()
-                                .requestMatchers("/api/v1/admin/register").permitAll()
+                                .requestMatchers("/api/v1/admin/register").permitAll() // secure later -- shouldn't allow open admin registration
                                 .requestMatchers("/api/v1/guest/**").hasRole("GUEST")
                                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated())

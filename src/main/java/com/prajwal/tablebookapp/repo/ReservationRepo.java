@@ -37,6 +37,15 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("now") LocalDateTime now
     );
 
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.status = 'CONFIRMED' " +
+           "AND r.startTime <= :future " +
+           "AND r.endTime >= :past ")
+    List<Reservation> findActiveOrUpcomingReservations(
+            @Param("past") LocalDateTime past,
+            @Param("future") LocalDateTime future
+    );
+
     @Transactional
     @Modifying
     @Query("DELETE FROM Reservation r WHERE r.status = 'CANCELLED' AND r.endTime < :cutoff ")
