@@ -2,6 +2,7 @@ package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.RegisterDto;
 import com.prajwal.tablebookapp.exception.AuthenticationFailedException;
+import com.prajwal.tablebookapp.exception.UserNotFoundException;
 import com.prajwal.tablebookapp.model.AuthProvider;
 import com.prajwal.tablebookapp.model.Role;
 import com.prajwal.tablebookapp.model.Users;
@@ -48,6 +49,11 @@ public class UserService {
 
         System.out.println("Registering user: " + user);
         return userRepo.save(user);
+    }
+
+    public Users getUserByEmail(String email) {
+        return userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     public String verifyUser(String email, String password) {

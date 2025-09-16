@@ -15,4 +15,11 @@ public class ResponseWrapper<T> {
     private String message;
     private T data;
 
+    // Pagination fields (optional)
+    private Integer pageNo;
+    private Integer pageSize;
+    private Long totalElements;
+    private Integer totalPages;
+    private Boolean last;
+
 }

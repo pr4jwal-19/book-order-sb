@@ -2,6 +2,8 @@ package com.prajwal.tablebookapp.repo;
 
 import com.prajwal.tablebookapp.model.Reservation;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -14,7 +16,7 @@ import java.util.List;
 @Repository
 public interface ReservationRepo extends JpaRepository<Reservation, Long> {
 
-    List<Reservation> findByUsersUserId(Long userId);
+    Page<Reservation> findByUsersUserId(Long userId, Pageable pageable);
     List<Reservation> findByCafeTableTableId(Long tableId);
 
     @Query("SELECT r FROM Reservation r " +

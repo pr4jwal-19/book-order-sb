@@ -11,12 +11,13 @@ import com.prajwal.tablebookapp.repo.CafeTableRepo;
 import com.prajwal.tablebookapp.repo.ReservationRepo;
 import com.prajwal.tablebookapp.repo.UserRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ReservationService {
@@ -79,25 +80,21 @@ public class ReservationService {
         return toDto(reservationRepo.save(reservation));
     }
 
-    public List<ReservationDto> getReservationsFromCurrentUser() {
+    public Page<ReservationDto> getReservationsFromCurrentUser(Pageable pageable) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
 
         Users currUser = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
-        return reservationRepo.findByUsersUserId(currUser.getUserId())
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+        return reservationRepo.findByUsersUserId(currUser.getUserId(), pageable)
+                .map(this::toDto);
     }
 
     // admin control panel - service
-    public List<ReservationDto> getAllReservations() {
-        return reservationRepo.findAll()
-                .stream()
-                .map(this::toDto)
-                .collect(Collectors.toList());
+    public Page<ReservationDto> getAllReservations(Pageable pageable) {
+        return reservationRepo.findAll(pageable)
+                .map(this::toDto);
     }
 
     // admin control panel - service

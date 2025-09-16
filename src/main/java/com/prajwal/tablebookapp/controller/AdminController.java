@@ -1,23 +1,27 @@
 package com.prajwal.tablebookapp.controller;
 
-import com.prajwal.tablebookapp.dto.CafeTableDto;
-import com.prajwal.tablebookapp.dto.RegisterDto;
-import com.prajwal.tablebookapp.dto.ReservationDto;
-import com.prajwal.tablebookapp.dto.ResponseWrapper;
+import com.prajwal.tablebookapp.dto.*;
 import com.prajwal.tablebookapp.model.Role;
 import com.prajwal.tablebookapp.model.Users;
 import com.prajwal.tablebookapp.service.CafeTableService;
 import com.prajwal.tablebookapp.service.ReservationService;
 import com.prajwal.tablebookapp.service.UserService;
 import com.prajwal.tablebookapp.service.utils.JwtUtils;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/v1/admin")
 // This controller will handle admin-related operations
 public class AdminController {
@@ -37,7 +41,7 @@ public class AdminController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ResponseWrapper<Users>> registerAdmin(@RequestBody RegisterDto req) {
+    public ResponseEntity<ResponseWrapper<AuthResponseDto>> registerAdmin(@RequestBody RegisterDto req) {
 
         req.setRole(Role.ADMIN);
         //System.out.println("Registering admin: " + req);
@@ -47,16 +51,27 @@ public class AdminController {
                 user.getEmail(),
                 Collections.singletonList(user.getRole().name())
         );
+
+        AuthResponseDto response = AuthResponseDto.builder()
+                        .token(token)
+                        .user(user)
+                        .build();
+
         System.out.println("Generated Token: " + token); // use it later -- can make ResponseDto and work with it to throw token too
-        ResponseWrapper<Users> res = new ResponseWrapper<>(true, "Admin registered successfully", user);
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(
+                ResponseWrapper.<AuthResponseDto>builder()
+                        .success(true)
+                        .message("Admin registered successfully")
+                        .data(response)
+                        .build()
+        );
     }//tested
 
     // admin flow
     // when admin logs in and clicks manage tables
     // can add, update, delete tables
 
-    @PostMapping("/addTable")
+    @PostMapping("/add-table")
     public ResponseEntity<ResponseWrapper<CafeTableDto>> addTable(@RequestBody CafeTableDto cafeTableDto) {
         CafeTableDto savedTable = cafeTableService.addTable(cafeTableDto);
         return ResponseEntity.ok(
@@ -68,7 +83,7 @@ public class AdminController {
         );
     }//tested
 
-    @PutMapping("/updateTable/{tableId}")
+    @PutMapping("/update-table/{tableId}")
     public ResponseEntity<ResponseWrapper<CafeTableDto>> updateTable(@PathVariable Long tableId, @RequestBody CafeTableDto cafeTableDto) {
         CafeTableDto updatedTable =
                 cafeTableService.updateTable(tableId, cafeTableDto);
@@ -81,7 +96,7 @@ public class AdminController {
         );
     }//tested
 
-    @DeleteMapping("/deleteTable/{tableId}")
+    @DeleteMapping("/delete-table/{tableId}")
     public ResponseEntity<ResponseWrapper<Void>> deleteTable(@PathVariable Long tableId) {
         cafeTableService.deleteTable(tableId);
         return ResponseEntity.ok(
@@ -95,18 +110,35 @@ public class AdminController {
 
     // view and manage(cancel) all reservations
     @GetMapping("/reservations")
-    public ResponseEntity<ResponseWrapper<List<ReservationDto>>> viewAllReservations() {
-        List<ReservationDto> reservations = reservationService.getAllReservations();
+    public ResponseEntity<ResponseWrapper<List<ReservationDto>>>
+        viewAllReservations(@RequestParam(required = false, defaultValue = "1") @Min(1) int pageNo,
+                            @RequestParam(required = false, defaultValue = "5") @Min(1) @Max(30) int pageSize,
+                            @RequestParam(required = false, defaultValue = "reservationId") String sortBy,
+                            @RequestParam(required = false, defaultValue = "asc") String sortDir) {
+
+        Sort sort = sortDir.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Page<ReservationDto> reservations = reservationService
+                .getAllReservations(
+                        PageRequest.of(pageNo - 1, pageSize, sort)
+                );
         return ResponseEntity.ok(
                 ResponseWrapper.<List<ReservationDto>>builder()
                         .success(true)
                         .message("Fetched all reservations successfully")
-                        .data(reservations)
+                        .data(reservations.getContent())
+                        .pageNo(reservations.getNumber() + 1)
+                        .pageSize(reservations.getSize())
+                        .totalElements(reservations.getTotalElements())
+                        .totalPages(reservations.getTotalPages())
+                        .last(reservations.isLast())
                         .build()
         );
     }//tested
 
-    @DeleteMapping("/cancelReservation/{reservationId}")
+    @DeleteMapping("/cancel-reservation/{reservationId}")
     public ResponseEntity<ResponseWrapper<Void>> cancelReservation(@PathVariable Long reservationId) {
         reservationService.cancelReservation(reservationId);
         return ResponseEntity.ok(
