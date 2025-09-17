@@ -29,6 +29,8 @@ public class Reservation {
     @Column(nullable = false)
     private ReservationStatus status;
 
+    private boolean reminderSent;
+
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -42,5 +44,6 @@ public class Reservation {
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.reminderSent = false;
     }
 }

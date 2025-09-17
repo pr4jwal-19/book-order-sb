@@ -48,6 +48,15 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("future") LocalDateTime future
     );
 
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.status = 'CONFIRMED' " +
+           "AND r.startTime BETWEEN :reminderWindowStart AND :reminderWindowEnd " +
+            "AND r.reminderSent = false")
+    List<Reservation> findReservationsStartingSoon(
+            @Param("reminderWindowStart") LocalDateTime reminderWindowStart,
+            @Param("reminderWindowEnd") LocalDateTime reminderWindowEnd
+    );
+
     @Transactional
     @Modifying
     @Query("DELETE FROM Reservation r WHERE r.status = 'CANCELLED' AND r.endTime < :cutoff ")
