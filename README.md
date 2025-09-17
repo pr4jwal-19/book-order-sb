@@ -1,3 +1,5 @@
+[![CI - Build and Test Spring Boot Application](https://github.com/pr4jwal-19/book-order-sb/actions/workflows/ci.yml/badge.svg)](https://github.com/pr4jwal-19/book-order-sb/actions/workflows/ci.yml)
+
 # 🍽️ Table Booking App
 
 A **Spring Boot** application that supports **OAuth2 login (Google/GitHub)** and **JWT-based stateless authentication**.  
