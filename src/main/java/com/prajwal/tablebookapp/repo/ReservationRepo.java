@@ -16,8 +16,8 @@ import java.util.List;
 @Repository
 public interface ReservationRepo extends JpaRepository<Reservation, Long> {
 
-    Page<Reservation> findByUsersUserId(Long userId, Pageable pageable);
-    List<Reservation> findByCafeTableTableId(Long tableId);
+    Page<Reservation> findByUserUserId(Long userId, Pageable pageable);
+    //List<Reservation> findByCafeTableTableId(Long tableId);
 
     @Query("SELECT r FROM Reservation r " +
             "WHERE r.cafeTable.tableId = :tableId " +

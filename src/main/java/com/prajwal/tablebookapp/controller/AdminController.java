@@ -6,7 +6,7 @@ import com.prajwal.tablebookapp.model.Users;
 import com.prajwal.tablebookapp.service.CafeTableService;
 import com.prajwal.tablebookapp.service.ReservationService;
 import com.prajwal.tablebookapp.service.UserService;
-import com.prajwal.tablebookapp.service.utils.JwtUtils;
+import com.prajwal.tablebookapp.service.utils.AuthResponseBuilder;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -30,12 +29,9 @@ public class AdminController {
     private final CafeTableService cafeTableService;
     private final ReservationService reservationService;
 
-    private final JwtUtils jwtUtils;
-
     @Autowired
-    public AdminController(UserService userService, JwtUtils jwtUtils, CafeTableService cafeTableService, ReservationService reservationService) {
+    public AdminController(UserService userService, CafeTableService cafeTableService, ReservationService reservationService) {
         this.userService = userService;
-        this.jwtUtils = jwtUtils;
         this.cafeTableService = cafeTableService;
         this.reservationService = reservationService;
     }
@@ -47,21 +43,11 @@ public class AdminController {
         //System.out.println("Registering admin: " + req);
         Users user = userService.registerUser(req);
 
-        String token = jwtUtils.generateToken(
-                user.getEmail(),
-                Collections.singletonList(user.getRole().name())
-        );
-
-        AuthResponseDto response = AuthResponseDto.builder()
-                        .token(token)
-                        .user(user)
-                        .build();
-
-        System.out.println("Generated Token: " + token); // use it later -- can make ResponseDto and work with it to throw token too
+        AuthResponseDto response = AuthResponseBuilder.buildAuthResponseDto(user, "");
         return ResponseEntity.ok(
                 ResponseWrapper.<AuthResponseDto>builder()
                         .success(true)
-                        .message("Admin registered successfully")
+                        .message("Admin registered successfully ! Please check your email for verification link.")
                         .data(response)
                         .build()
         );

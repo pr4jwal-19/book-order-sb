@@ -6,7 +6,7 @@ import com.prajwal.tablebookapp.model.Users;
 import com.prajwal.tablebookapp.service.CafeTableService;
 import com.prajwal.tablebookapp.service.ReservationService;
 import com.prajwal.tablebookapp.service.UserService;
-import com.prajwal.tablebookapp.service.utils.JwtUtils;
+import com.prajwal.tablebookapp.service.utils.AuthResponseBuilder;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -29,12 +28,9 @@ public class GuestController {
     private final CafeTableService cafeTableService;
     private final ReservationService reservationService;
 
-    private final JwtUtils jwtUtils;
-
     @Autowired
-    public GuestController(UserService userService, JwtUtils jwtUtils, CafeTableService cafeTableService, ReservationService reservationService) {
+    public GuestController(UserService userService, CafeTableService cafeTableService, ReservationService reservationService) {
         this.userService = userService;
-        this.jwtUtils = jwtUtils;
         this.cafeTableService = cafeTableService;
         this.reservationService = reservationService;
     }
@@ -46,21 +42,12 @@ public class GuestController {
 
         Users user = userService.registerUser(req);
 
-        String token = jwtUtils.generateToken(
-                user.getEmail(),
-                Collections.singletonList(user.getRole().name())
-        );
+        AuthResponseDto response = AuthResponseBuilder.buildAuthResponseDto(user, "");
 
-        AuthResponseDto response = AuthResponseDto.builder()
-                .token(token)
-                .user(user)
-                .build();
-
-        System.out.println("Generated Token: " + token);
         return ResponseEntity.ok(
                 ResponseWrapper.<AuthResponseDto>builder()
                         .success(true)
-                        .message("Guest registered successfully")
+                        .message("Guest registered successfully ! Please check your email for verification.")
                         .data(response)
                         .build()
         );

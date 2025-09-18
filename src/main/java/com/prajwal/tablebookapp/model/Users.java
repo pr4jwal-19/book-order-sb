@@ -31,7 +31,7 @@ public class Users {
     @Column(unique = true)
     private String phoneNo;
 
-    @Column(nullable = false)
+    @Column(unique = true) // check
     private String password;
 
     @Column(nullable = false)
@@ -43,10 +43,16 @@ public class Users {
     private AuthProvider authProvider;
     private String authProviderId;
 
+    @Column(nullable = false)
+    private boolean isUserVerified = false;
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    @OneToMany(mappedBy = "users", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private VerificationToken verificationToken;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Reservation> reservations = new ArrayList<>();
 
     @PrePersist

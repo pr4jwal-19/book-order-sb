@@ -68,7 +68,7 @@ public class ReservationService {
 
         Reservation reservation = Reservation.builder()
                 .cafeTable(table)
-                .users(currUser)
+                .user(currUser)
                 .startTime(tableRequest.getStartTime())
                 .endTime(tableRequest.getEndTime())
                 .status(ReservationStatus.CONFIRMED)
@@ -87,7 +87,7 @@ public class ReservationService {
         Users currUser = userRepo.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
-        return reservationRepo.findByUsersUserId(currUser.getUserId(), pageable)
+        return reservationRepo.findByUserUserId(currUser.getUserId(), pageable)
                 .map(this::toDto);
     }
 
@@ -116,7 +116,7 @@ public class ReservationService {
     private ReservationDto toDto(Reservation reservation) {
         return ReservationDto.builder()
                 .reservationId(reservation.getReservationId())
-                .userId(reservation.getUsers().getUserId())
+                .userId(reservation.getUser().getUserId())
                 .tableId(reservation.getCafeTable().getTableId())
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())

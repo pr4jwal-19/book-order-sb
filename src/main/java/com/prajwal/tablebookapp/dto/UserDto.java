@@ -5,9 +5,14 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LoginDto {
+public class UserDto {
+
+    private Long usrId;
 
     private String email;
-    private String password;
+
+    private String userName;
+
+    private boolean userVerified;
 
 }

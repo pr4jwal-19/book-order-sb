@@ -90,7 +90,7 @@ public class JobScheduler {
         log.info("Clean up old expired reservations job completed.");
     }
 
-    @Scheduled(cron = "0 */5 * * * *") // every 5 minutes
+    @Scheduled(cron = "0 */2 * * * *") // every 2 minutes
     @Transactional
     public void sendReservationReminders() {
         LocalDateTime now = LocalDateTime.now();
@@ -115,7 +115,12 @@ public class JobScheduler {
                     continue; // Skip
                 }
 
-                String to = r.getUsers().getEmail();
+                if (!r.getUser().isUserVerified()) {
+                    log.debug("Skipping reminder for reservation {} (user not verified).", r.getReservationId());
+                    continue; // Skip
+                }
+
+                String to = r.getUser().getEmail();
                 String subject = "Reminder: Upcoming Reservation at Our Cafe";
                 String body = String.format(
                         "Dear %s,<br><br>" +
@@ -127,7 +132,7 @@ public class JobScheduler {
                                 "We look forward to serving you!<br><br>" +
                                 "Best regards,<br>" +
                                 "Cafe Team",
-                        r.getUsers().getEmail(),
+                        r.getUser().getEmail(),
                         r.getCafeTable().getTableNo(),
                         r.getStartTime(),
                         r.getEndTime()
