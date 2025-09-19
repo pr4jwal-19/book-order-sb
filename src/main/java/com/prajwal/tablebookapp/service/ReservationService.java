@@ -41,6 +41,7 @@ public class ReservationService {
             throw new TableNotAvailableException(tableRequest.getTableId());
         }
 
+        // check for past-time booking
         if (tableRequest.getStartTime().isBefore(LocalDateTime.now())) {
             throw new UnauthorizedActionException("Cannot book table in the past.");
         }
