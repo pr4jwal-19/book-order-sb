@@ -19,6 +19,7 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
     Page<Reservation> findByUserUserId(Long userId, Pageable pageable);
     //List<Reservation> findByCafeTableTableId(Long tableId);
 
+    // for table booking -> so only CONFIRMED reservations are considered
     @Query("SELECT r FROM Reservation r " +
             "WHERE r.cafeTable.tableId = :tableId " +
             "AND r.status = 'CONFIRMED' " +
@@ -29,18 +30,21 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("endTime") LocalDateTime endTime
     );
 
+    // check if table has any active reservations -- delete only when table status = AVAILABLE
+    // can delete -> (i.e. rs : CANCELLED/COMPLETED)
     @Query("SELECT CASE WHEN COUNT(r) > 0 THEN true ELSE false END " +
            "FROM Reservation r " +
            "WHERE r.cafeTable.tableId = :tableId " +
-            "AND r.status = 'CONFIRMED' " +
+            "AND r.status IN ('CONFIRMED', 'CHECKED_IN') " +
            "AND r.endTime > :now ")
     boolean hasActiveReservations(
             @Param("tableId") Long tableId,
             @Param("now") LocalDateTime now
     );
 
+    // updating table statuses every 2 minutes
     @Query("SELECT r FROM Reservation r " +
-           "WHERE r.status = 'CONFIRMED' " +
+           "WHERE r.status IN ('CONFIRMED', 'CHECKED_IN') " +
            "AND r.startTime <= :future " +
            "AND r.endTime >= :past ")
     List<Reservation> findActiveOrUpcomingReservations(
@@ -48,6 +52,8 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("future") LocalDateTime future
     );
 
+    // sending reminder emails to users 10-25 minutes before their reservation start-time
+    // therefore, rs: CONFIRMED is okay
     @Query("SELECT r FROM Reservation r " +
            "WHERE r.status = 'CONFIRMED' " +
            "AND r.startTime BETWEEN :reminderWindowStart AND :reminderWindowEnd " +
@@ -71,4 +77,20 @@ public interface ReservationRepo extends JpaRepository<Reservation, Long> {
             @Param("cutoff") LocalDateTime cutoff
     );
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM Reservation r WHERE r.status = 'COMPLETED' AND r.endTime < :cutoff ")
+    void deleteCompletedReservationsPastEndTime(
+            @Param("cutoff") LocalDateTime cutoff
+    );
+
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.status = 'CONFIRMED' " +
+           "AND r.startTime < :cutoff ")
+    List<Reservation> findStaleReservations(@Param("cutoff") LocalDateTime cutoff);
+
+    @Query("SELECT r FROM Reservation r " +
+           "WHERE r.status = 'CHECKED_IN' " +
+           "AND r.endTime < :now ")
+    List<Reservation> findReservationsToMarkCompleted(@Param("now") LocalDateTime now);
 }

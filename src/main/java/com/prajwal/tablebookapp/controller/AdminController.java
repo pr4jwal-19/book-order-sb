@@ -1,6 +1,7 @@
 package com.prajwal.tablebookapp.controller;
 
 import com.prajwal.tablebookapp.dto.*;
+import com.prajwal.tablebookapp.model.ReservationStatus;
 import com.prajwal.tablebookapp.model.Role;
 import com.prajwal.tablebookapp.model.Users;
 import com.prajwal.tablebookapp.service.CafeTableService;
@@ -123,6 +124,20 @@ public class AdminController {
                         .build()
         );
     }//tested
+
+    @PutMapping("reservation/{reservationId}/checkin")
+    public ResponseEntity<ResponseWrapper<String>> updateReservation(@PathVariable Long reservationId) {
+
+        reservationService.updateReservationStatus(reservationId);
+        return ResponseEntity.ok(
+                ResponseWrapper.<String>builder()
+                        .success(true)
+                        .message("Reservation status updated successfully")
+                        .data("Reservation "+reservationId+" marked as "+ ReservationStatus.CHECKED_IN)
+                        .build()
+        );
+
+    }
 
     @DeleteMapping("/cancel-reservation/{reservationId}")
     public ResponseEntity<ResponseWrapper<Void>> cancelReservation(@PathVariable Long reservationId) {

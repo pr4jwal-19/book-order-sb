@@ -2,10 +2,7 @@ package com.prajwal.tablebookapp.service;
 
 import com.prajwal.tablebookapp.dto.BookTableRequest;
 import com.prajwal.tablebookapp.dto.ReservationDto;
-import com.prajwal.tablebookapp.exception.ReservationConflictException;
-import com.prajwal.tablebookapp.exception.ReservationNotFoundException;
-import com.prajwal.tablebookapp.exception.TableNotAvailableException;
-import com.prajwal.tablebookapp.exception.UserNotFoundException;
+import com.prajwal.tablebookapp.exception.*;
 import com.prajwal.tablebookapp.model.*;
 import com.prajwal.tablebookapp.repo.CafeTableRepo;
 import com.prajwal.tablebookapp.repo.ReservationRepo;
@@ -17,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -41,6 +39,10 @@ public class ReservationService {
         // status -> BOOKED -> guest has arrived and is seated
         if (table.getStatus() == TableStatus.BOOKED) {
             throw new TableNotAvailableException(tableRequest.getTableId());
+        }
+
+        if (tableRequest.getStartTime().isBefore(LocalDateTime.now())) {
+            throw new UnauthorizedActionException("Cannot book table in the past.");
         }
 
         // check for time validity
@@ -95,6 +97,20 @@ public class ReservationService {
     public Page<ReservationDto> getAllReservations(Pageable pageable) {
         return reservationRepo.findAll(pageable)
                 .map(this::toDto);
+    }
+
+    // admin control panel - service
+    public void updateReservationStatus(Long reservationId) {
+
+        Reservation reservation = reservationRepo.findById(reservationId)
+                .orElseThrow(() -> new ReservationNotFoundException(reservationId));
+
+        if (reservation.getStatus() != ReservationStatus.CONFIRMED) {
+            throw new UnauthorizedActionException("Can only check-in CONFIRMED reservations.");
+        }
+
+        reservation.setStatus(ReservationStatus.CHECKED_IN);
+        reservationRepo.save(reservation);
     }
 
     // admin control panel - service

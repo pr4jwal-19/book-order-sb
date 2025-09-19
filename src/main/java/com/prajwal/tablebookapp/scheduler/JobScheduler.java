@@ -2,6 +2,7 @@ package com.prajwal.tablebookapp.scheduler;
 
 import com.prajwal.tablebookapp.model.CafeTable;
 import com.prajwal.tablebookapp.model.Reservation;
+import com.prajwal.tablebookapp.model.ReservationStatus;
 import com.prajwal.tablebookapp.model.TableStatus;
 import com.prajwal.tablebookapp.repo.CafeTableRepo;
 import com.prajwal.tablebookapp.repo.ReservationRepo;
@@ -38,12 +39,6 @@ public class JobScheduler {
     @Transactional
     public void updateTableStatuses() {
 
-        List<Reservation> allReservations = reservationRepo.findAll();
-
-        if (allReservations.isEmpty()) {
-            return;
-        }
-
         LocalDateTime now = LocalDateTime.now();
         log.info("Running updateTableStatuses job at {}", now);
 
@@ -51,6 +46,11 @@ public class JobScheduler {
                 now.minusMinutes(20),
                 now.plusMinutes(20)
         );
+
+        if (relevantReservations.isEmpty()) {
+            log.info("No relevant reservations found. Exiting job.");
+            return;
+        }
 
         log.info("Found {} relevant reservations to process.", relevantReservations.size());
 
@@ -61,7 +61,7 @@ public class JobScheduler {
                 if (now.isBefore(r.getStartTime())) {
                     currTable.setStatus(TableStatus.RESERVED);
                 }
-                else if (now.isBefore(r.getEndTime().plusMinutes(15))) {
+                else if (now.isBefore(r.getEndTime().plusMinutes(15)) && (r.getStatus() == ReservationStatus.CHECKED_IN)) {
                     currTable.setStatus(TableStatus.BOOKED);
                 }
                 else {
@@ -88,6 +88,90 @@ public class JobScheduler {
         log.info("Clean up old cancelled reservations job completed.");
         reservationRepo.deleteExpiredConfirmedReservations(cutoff);
         log.info("Clean up old expired reservations job completed.");
+        reservationRepo.deleteCompletedReservationsPastEndTime(cutoff);
+        log.info("Clean up old completed reservations job completed.");
+
+    }
+
+    @Scheduled(cron = "0 */5 * * * *") // every 5 minutes
+    @Transactional
+    public void autoCancelStaleReservations() {
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime cutoff = now.minusMinutes(15); // 15 minutes ago
+
+        log.info("Running auto-cancel stale reservations job at {}", now);
+
+        List<Reservation> staleReservations = reservationRepo.findStaleReservations(cutoff);
+
+        log.info("Found {} stale reservations to cancel.", staleReservations.size());
+
+        for (Reservation r: staleReservations) {
+            try {
+                r.setStatus(ReservationStatus.CANCELLED);
+
+                CafeTable currTable = r.getCafeTable();
+                currTable.setStatus(TableStatus.AVAILABLE);
+                cafeTableRepo.save(currTable);
+                reservationRepo.save(r);
+
+                log.info("Auto-cancelled stale reservation {}", r.getReservationId());
+
+                emailNotificationService.sendReservationReminder(
+                        r.getUser().getEmail(),
+                        "Reservation Cancelled Due to No-Show",
+                        String.format(
+                                "Dear %s,<br><br>" +
+                                        "We regret to inform you that your reservation at our cafe has been automatically cancelled due to a no-show.<br>" +
+                                        "Reservation Details:<br>" +
+                                        "Table Number: %s<br>" +
+                                        "Start Time: %s<br>" +
+                                        "End Time: %s<br><br>" +
+                                        "If you have any questions or would like to make a new reservation, please feel free to contact us.<br><br>" +
+                                        "Best regards,<br>" +
+                                        "Cafe Team",
+                                r.getUser().getEmail(),
+                                r.getCafeTable().getTableNo(),
+                                r.getStartTime(),
+                                r.getEndTime()
+                        )
+                );
+
+                log.info("Notification email sent for auto-cancelled reservation {}", r.getReservationId());
+            }catch (Exception e) {
+                log.error("Failed to auto-cancel stale reservation {}", r.getReservationId(), e);
+            }
+        }
+
+        log.info("Auto-cancel stale reservations job completed.");
+    }
+
+    @Scheduled(cron = "0 */5 * * * *")
+    @Transactional
+    public void autoMarkCompletedReservations() {
+
+        LocalDateTime now = LocalDateTime.now();
+        log.info("Running auto-mark completed reservations job at {}", now);
+
+        List<Reservation> toBeCompleted = reservationRepo.findReservationsToMarkCompleted(now);
+        log.info("Found {} reservations to mark completed.", toBeCompleted.size());
+
+        for (Reservation r: toBeCompleted) {
+            try {
+                r.setStatus(ReservationStatus.COMPLETED);
+                reservationRepo.save(r);
+
+                CafeTable currTable = r.getCafeTable();
+                currTable.setStatus(TableStatus.AVAILABLE);
+                cafeTableRepo.save(currTable);
+
+                log.info("Marked reservation {} as COMPLETED and freed the table {}.", r.getReservationId(), currTable.getTableNo());
+            } catch (Exception e) {
+                log.error("Failed to mark reservation {} as COMPLETED.", r.getReservationId(), e);
+            }
+        }
+
+        log.info("Auto-mark completed reservations job completed.");
     }
 
     @Scheduled(cron = "0 */2 * * * *") // every 2 minutes
