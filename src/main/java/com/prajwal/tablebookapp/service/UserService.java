@@ -71,7 +71,7 @@ public class UserService {
 
         verificationTokenRepo.save(verificationToken);
 
-        // Send email with link
+        // Send email with link -> after deploy -- change the link
         String verificationLink = AppConstants.APP_BASE_URL + "/auth/verify?token=" + vToken;
         emailNotificationService.sendReservationReminder(
                 savedUser.getEmail(),

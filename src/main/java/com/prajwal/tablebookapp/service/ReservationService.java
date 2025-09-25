@@ -110,6 +110,9 @@ public class ReservationService {
             throw new UnauthorizedActionException("Can only check-in CONFIRMED reservations.");
         }
 
+        CafeTable table = reservation.getCafeTable();
+        table.setStatus(TableStatus.BOOKED);
+        cafeTableRepo.save(table);
         reservation.setStatus(ReservationStatus.CHECKED_IN);
         reservationRepo.save(reservation);
     }

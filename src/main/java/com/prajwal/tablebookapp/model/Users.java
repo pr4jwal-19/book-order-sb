@@ -31,7 +31,7 @@ public class Users {
     @Column(unique = true)
     private String phoneNo;
 
-    @Column(unique = true) // check
+    @Column(nullable = true) // check
     private String password;
 
     @Column(nullable = false)
