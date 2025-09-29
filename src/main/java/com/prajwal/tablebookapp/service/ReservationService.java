@@ -138,9 +138,11 @@ public class ReservationService {
                 .reservationId(reservation.getReservationId())
                 .userId(reservation.getUser().getUserId())
                 .tableId(reservation.getCafeTable().getTableId())
+                .tableNo(reservation.getCafeTable().getTableNo())
                 .startTime(reservation.getStartTime())
                 .endTime(reservation.getEndTime())
                 .status(reservation.getStatus().name())
+                .createdAt(reservation.getCreatedAt())
                 .build();
     }
 }

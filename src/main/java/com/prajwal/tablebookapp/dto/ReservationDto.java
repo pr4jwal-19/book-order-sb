@@ -15,9 +15,13 @@ public class ReservationDto {
 
     private Long tableId;
 
+    private String tableNo;
+
     private LocalDateTime startTime;
 
     private LocalDateTime endTime;
 
     private String status;
+
+    private LocalDateTime createdAt;
 }
