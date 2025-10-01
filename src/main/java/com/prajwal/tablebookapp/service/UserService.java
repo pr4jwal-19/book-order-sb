@@ -1,5 +1,6 @@
 package com.prajwal.tablebookapp.service;
 
+import com.prajwal.tablebookapp.dto.ProfileDto;
 import com.prajwal.tablebookapp.dto.RegisterDto;
 import com.prajwal.tablebookapp.exception.AuthenticationFailedException;
 import com.prajwal.tablebookapp.exception.UserNotFoundException;
@@ -119,5 +120,23 @@ public class UserService {
         newUser.setAuthProvider(AuthProvider.GOOGLE);
 
         return userRepo.save(newUser);
+    }
+
+    public ProfileDto updateUserProfile(String email, ProfileDto profileDto) {
+
+        Users user = userRepo.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
+
+        user.setUsername(profileDto.getUsername());
+        user.setPhoneNo(profileDto.getPhoneNo());
+        user.setAddress(profileDto.getAddress());
+
+        Users updated = userRepo.save(user);
+        return ProfileDto.builder()
+                .username(updated.getUsername())
+                .email(updated.getEmail())
+                .phoneNo(updated.getPhoneNo())
+                .address(updated.getAddress())
+                .build();
     }
 }

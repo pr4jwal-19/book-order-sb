@@ -1,13 +1,14 @@
 package com.prajwal.tablebookapp.dto;
 
-import com.prajwal.tablebookapp.model.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class RegisterDto {
+@Builder
+public class ProfileDto {
 
     @NotBlank(message = "Username is required")
     private String username;
@@ -15,11 +16,9 @@ public class RegisterDto {
     @Email(message = "Invalid email format")
     private String email;
 
-    private String password;
-
-    @Pattern(regexp = "^\\d{10}$", message = "Phone number must be 10 digits")
+    @Pattern(regexp="^\\d{10}$", message = "Phone number must be 10 digits")
     private String phoneNo;
 
-    private Role role; // Auto done by controller based on the endpoint
+    private String address;
 
 }
